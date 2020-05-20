@@ -32,6 +32,8 @@ Optional: Remove the **/etc/pihole/PyPhDB** directory.
 
 This script will export the following files to **/etc/pihole/PyPhDB**: **adlists.list** (adlists), **whitelist.list** (exact whitelist), **blacklist.list** (exact blacklist), **whitelist_regex.list** (regex whitelist), **regex.list** (regex blacklist) and **gravity.list** (gravity domains)
 
+Adlist urls, exact blacklist / whitelist domains and the regexps are validated before being allowed to enter the DB.
+
 **gravity.list** is excluded from the upload process due to the way the entries are stored. This is dumped only for diagnostic purposes.
 
 During the upload process, the script uses **INSERT OR IGNORE** to avoid issues caused by IDs changing etc. The script also determines entires that exist locally, but not in the database and will carefully remove them accordingly.
