@@ -1,24 +1,37 @@
 # PyPhDB
-This script has been created to interact with the Pi-hole database with the use of flat-files.
-
-The view is that it will eventually export your adlists, whitelist, blacklist, whitelist regexps and blacklist regexps to plain text files for you to modify, and then re-import into the database.
-
-### Current Functionality ###
-Running this script will export the following files to **/etc/pihole/PyPhDB**:
-* adlists.list
-* whitelist.list
-* blacklist.list
-* whitelist_regex.list
-* regex.list
-* gravity.list
-
-Import functionality is currently unavailable, but it may still serve useful in its current state for diagnostic purposes.
+This script has been created to give you the ability to quickly edit your **Adlists**, **Whitelist (Exact)**, **Whitelist (Regex)**, **Blacklist**, **Blacklist (Regex)** from flat-files (pre v5.0 behaviour).
 
 ### Requirements ###
-Python **3.6+** is required to run this script.
+* Python **3.6+** is required to run this script.
+* Validators Python module (for adlist url validation)
 
-### Run the script ###
-`curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3`
+#### Validators installation (required) ####
+1. `sudo apt-get install python3-pip`
+2. `sudo pip3 install validators`
 
-### Manually remove output directory ###
-`sudo rm -r /etc/pihole/PyPhDB`
+### How to use ###
+
+There are three main steps to this script:
+
+#### dump ####
+Dump the items from your Pi-hole DB to  **/etc/pihole/PyPhDB**
+
+` curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --dump`
+
+#### upload ####
+Upload the changes to your Pi-hole DB
+
+` curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --upload`
+
+#### clean ####
+Optional: Remove the **/etc/pihole/PyPhDB** directory.
+
+` curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --clean`
+
+### Further Information ###
+
+This script will export the following files to **/etc/pihole/PyPhDB**: **adlists.list** (adlists), **whitelist.list** (exact whitelist), **blacklist.list** (exact blacklist), **whitelist_regex.list** (regex whitelist), **regex.list** (regex blacklist) and **gravity.list** (gravity domains)
+
+**gravity.list** is excluded from the upload process due to the way the entries are stored. This is dumped only for diagnostic purposes.
+
+During the upload process, the script uses **INSERT OR IGNORE** to avoid issues caused by IDs changing etc. The script also determines entires that exist locally, but not in the database and will carefully remove them accordingly.
