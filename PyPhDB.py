@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 import shutil
+import subprocess
 import sys
 import sqlite3
 import validators
@@ -254,6 +255,11 @@ class PyPhDB:
             shutil.rmtree(self.path_output_dir)
 
 
+def restart_pihole():
+    print('[i] Restarting Pi-hole')
+    subprocess.call(['pihole', 'restartdns', 'reload'], stdout=subprocess.DEVNULL)
+
+
 # Create a new argument parser
 parser = argparse.ArgumentParser()
 # Create mutual exclusion groups
@@ -281,7 +287,7 @@ if PyPhDB_inst.access_check():
     # If the clean flag is enabled
     if args.clean:
         PyPhDB_inst.clean_dump()
-        exit(0)
+        exit()
     # If we're able to access the DB
     if PyPhDB_inst.make_connection():
         # Populate sets with data from DB
@@ -291,10 +297,12 @@ if PyPhDB_inst.access_check():
             # Dump data to disk
             PyPhDB_inst.dump_data()
         # If the upload flag is enabled
-        if args.upload:
+        elif args.upload:
             PyPhDB_inst.upload_files()
         # Close the connection to the DB
         PyPhDB_inst.close_connection()
+        # Restart Pi-hole
+        restart_pihole()
     else:
         exit(1)
 else:
