@@ -1,6 +1,10 @@
+import argparse
 import os
+import re
 import shutil
+import sys
 import sqlite3
+import validators
 
 
 class PyPhDB:
@@ -117,18 +121,130 @@ class PyPhDB:
         for k, v in dict_output.items():
             # If the set is not empty
             if v:
-                self.output_file(k, v)
+                # Form the file path
+                path_file = os.path.join(self.path_output_dir, k)
 
-    def output_file(self, file_name, results):
+                print(f'[i] {k}:')
+                print(f'    --> Outputting {len(v)} lines to {path_file}')
 
-        path_file = os.path.join(self.path_output_dir, file_name)
+                with open(path_file, 'w') as fWrite:
+                    for line in sorted(v):
+                        fWrite.write(f'{line}\n')
 
-        print(f'[i] {file_name}:')
-        print(f'    --> Outputting {len(results)} lines to {path_file}')
+    def upload_files(self):
 
-        with open(path_file, 'w') as fWrite:
-            for line in sorted(results):
-                fWrite.write(f'{line}\n')
+        # Create a dictionary for easier output
+        dict_upload = {
+            'adlists.list': self.set_adlists,
+            'whitelist.list': self.set_whitelist,
+            'blacklist.list': self.set_blacklist,
+            'whitelist_regex.list': self.set_wl_regexps,
+            'regex.list': self.set_bl_regexps
+        }
+
+        # Insert or IGNORE
+        # Delete specifics
+        # Delete all of type (if file cleared) with exception to adlists
+
+        dict_sql = {
+            'adlists.list':
+            'INSERT OR IGNORE INTO adlist (address) VALUES (?)\
+            |DELETE FROM adlist WHERE address IN (?)',
+            'whitelist.list':
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (0, ?, 1)\
+            |DELETE FROM domainlist WHERE domain IN (?) AND type = 0\
+            |DELETE FROM domainlist WHERE type = 0',
+            'blacklist.list':
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (1, ?, 1)\
+            |DELETE FROM domainlist WHERE domain IN (?) AND type = 1\
+            |DELETE FROM domainlist WHERE type = 1',
+            'whitelist_regex.list':
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (2, ?, 1)\
+            |DELETE FROM domainlist WHERE domain IN (?) AND type = 2\
+            |DELETE FROM domainlist WHERE type = 2',
+            'regex.list':
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (3, ?, 1)\
+            |DELETE FROM domainlist WHERE domain IN (?) AND type = 3\
+            |DELETE FROM domainlist WHERE type = 3'
+        }
+
+        # Determine how each list needs to be validated
+        validators_adlist = {'adlists.list'}
+        validators_domain = {'whitelist.list', 'blacklist.list'}
+        validators_regexps = {'whitelist_regex.list', 'regex.list'}
+
+        # For each upload item (list)
+        for k, v in dict_upload.items():
+            print(f'[i] Processing {k}')
+            # Construct full file path
+            path_file = os.path.join(self.path_output_dir, k)
+            # Check if the file exists
+            if os.path.isfile(path_file):
+                # Create a new set to store changes
+                set_modified = set()
+                set_removal = set()
+                # Read the file in the output directory to a set
+                with open(path_file, 'r', encoding='utf-8', errors='ignore') as fOpen:
+                    # Generator for selecting only non-empty lines / non-commented lines
+                    lines = (x for x in map(str.strip, fOpen) if x and x[:1] != '#')
+                    # Use appropriate validation when reading from the files
+                    if k in validators_adlist:
+                        # For each url
+                        for line in lines:
+                            # If it's a valid URL
+                            if validators.url(line):
+                                # Add to the set
+                                set_modified.add(line)
+                    if k in validators_domain:
+                        # For each domain
+                        for line in lines:
+                            # If it's a valid domain
+                            if validators.domain(line):
+                                # Add to the set
+                                set_modified.add(line)
+                    elif k in validators_regexps:
+                        # For each regexp
+                        for line in lines:
+                            try:
+                                # Try to compile the regexp (test if valid)
+                                re.compile(line)
+                                # If valid, add to set
+                                set_modified.add(line)
+                            except re.error:
+                                # If invalid, skip to next
+                                continue
+
+                # If the set was populated
+                if set_modified:
+                    # Check if it's identical to DB
+                    if set_modified == v:
+                        print(' --> No Changes')
+                    else:
+                        print(' --> Updating DB')
+                        # Update or Ignore
+                        self.connection.executemany(dict_sql[k].split('|')[0], [(x,) for x in set_modified])
+                        # Find items that are in the DB but not in the modified files (for removal from db)
+                        set_removal.update(x for x in v if x not in set_modified)
+                        # If there are items to remove from the DB
+                        if set_removal:
+                            self.connection.executemany(dict_sql[k].split('|')[1], [(x,) for x in set_removal])
+                # If the file has been emptied
+                else:
+                    # Check whether the DB is already empty or not
+                    if set_modified == v:
+                        print(' --> No Changes')
+                        continue
+                    # Check if we've got a preset query to remove all
+                    try:
+                        sql_remove_all = dict_sql[k].split('|')[2]
+                    except IndexError as e:
+                        continue
+                    # If we do, run it
+                    if sql_remove_all:
+                        print(' --> Updating DB')
+                        self.connection.execute(dict_sql[k].split('|')[2])
+
+        self.connection.commit()
 
     def clean_dump(self):
         if os.path.exists(self.path_output_dir):
@@ -136,19 +252,47 @@ class PyPhDB:
             shutil.rmtree(self.path_output_dir)
 
 
+# Create a new argument parser
+parser = argparse.ArgumentParser()
+# Create mutual exclusion groups
+group_action = parser.add_mutually_exclusive_group()
+# Dump flag
+group_action.add_argument('-d', '--dump', help='Export elements of the Pi-hole DB', action='store_true')
+# Upload flag
+group_action.add_argument('-u', '--upload', help='Import text files to the Pi-hole DB', action='store_true')
+# Clean flag
+group_action.add_argument('-c', '--clean', help='Clean (remove) the output directory', action='store_true')
+# Parse arguments
+args = parser.parse_args()
+
+# If no arguments were passed
+if not len(sys.argv) > 1:
+    print('[i] No script arguments detected - Defaulted to DUMP')
+    # Default to dump mode
+    args.dump = True
+
 # Create a new instance
 PyPhDB_inst = PyPhDB()
 
 # Access check for DB
 if PyPhDB_inst.access_check():
+    # If the clean flag is enabled
+    if args.clean:
+        PyPhDB_inst.clean_dump()
+        exit(0)
     # If we're able to access the DB
     if PyPhDB_inst.make_connection():
         # Populate sets with data from DB
         PyPhDB_inst.fetch_data()
+        # If the dump flag is enabled
+        if args.dump:
+            # Dump data to disk
+            PyPhDB_inst.dump_data()
+        # If the upload flag is enabled
+        if args.upload:
+            PyPhDB_inst.upload_files()
         # Close the connection to the DB
         PyPhDB_inst.close_connection()
-        # Dump data to disk
-        PyPhDB_inst.dump_data()
     else:
         exit(1)
 else:
