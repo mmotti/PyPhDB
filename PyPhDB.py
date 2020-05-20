@@ -243,6 +243,8 @@ class PyPhDB:
                     if sql_remove_all:
                         print(' --> Updating DB')
                         self.connection.execute(dict_sql[k].split('|')[2])
+            else:
+                print(' --> Local file does not exist')
 
         self.connection.commit()
 
