@@ -14,6 +14,9 @@ Running this script will export the following files to **/etc/pihole/PyPhDB**:
 
 Import functionality is currently unavailable, but it may still serve useful in its current state for diagnostic purposes.
 
+### Requirements ###
+Python **3.6+** is required to run this script.
+
 ### Run the script ###
 `curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3`
 
