@@ -196,7 +196,7 @@ class PyPhDB:
                             if validators.url(line):
                                 # Add to the set
                                 set_modified.add(line)
-                    if k in validators_domain:
+                    elif k in validators_domain:
                         # For each domain
                         for line in lines:
                             # If it's a valid domain
