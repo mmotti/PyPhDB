@@ -223,12 +223,12 @@ class PyPhDB:
                     else:
                         print(' --> Updating DB')
                         # Update or Ignore
-                        self.connection.executemany(dict_sql[k].split('|')[0], [(x,) for x in set_modified])
+                        self.cursor.executemany(dict_sql[k].split('|')[0], [(x,) for x in set_modified])
                         # Find items that are in the DB but not in the modified files (for removal from db)
                         set_removal.update(x for x in v if x not in set_modified)
                         # If there are items to remove from the DB
                         if set_removal:
-                            self.connection.executemany(dict_sql[k].split('|')[1], [(x,) for x in set_removal])
+                            self.cursor.executemany(dict_sql[k].split('|')[1], [(x,) for x in set_removal])
                 # If the file has been emptied
                 else:
                     # Check whether the DB is already empty or not
@@ -243,7 +243,7 @@ class PyPhDB:
                     # If we do, run it
                     if sql_remove_all:
                         print(' --> Updating DB')
-                        self.connection.execute(dict_sql[k].split('|')[2])
+                        self.cursor.execute(dict_sql[k].split('|')[2])
             else:
                 print(' --> Local file does not exist')
 
