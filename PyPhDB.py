@@ -253,6 +253,8 @@ class PyPhDB:
         if os.path.exists(self.path_output_dir):
             print('[i] Removing output directory')
             shutil.rmtree(self.path_output_dir)
+        else:
+            print('[i] Output directory does not exist')
 
 
 def restart_pihole():
