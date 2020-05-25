@@ -12,7 +12,7 @@ This script has been created to give you the ability to quickly edit your **Adli
 ### Docker ###
 This script should work with Pi-hole being run within a docker container. In order to interact with your docker container, you must use the `--docker` switch **and** specify your Pi-hole directory volume using `--directory`
 
-**Example:**
+####Example:####
 
 `curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --dump --docker --directory '/your/pihole/directory'`
 
