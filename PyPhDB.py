@@ -288,7 +288,7 @@ group_action.add_argument('-d', '--dump', help='Export elements of the Pi-hole D
 group_action.add_argument('-u', '--upload', help='Import text files to the Pi-hole DB', action='store_true')
 # Clean flag
 group_action.add_argument('-c', '--clean', help='Clean (remove) the output directory', action='store_true')
-# Add docker groups
+# Add options group
 group_options = parser.add_argument_group()
 # Docker flag
 group_options.add_argument('-dc', '--docker', help='Indicate that Pi-hole is being ran within a docker container',
