@@ -325,13 +325,15 @@ if PyPhDB_inst.access_check():
         if args.dump:
             # Dump data to disk
             PyPhDB_inst.dump_data()
+            # Close the connection to the DB
+            PyPhDB_inst.close_connection()
         # If the upload flag is enabled
         elif args.upload:
             PyPhDB_inst.upload_files()
-        # Close the connection to the DB
-        PyPhDB_inst.close_connection()
-        # Restart Pi-hole
-        restart_pihole(docker=args.docker)
+            # Close the connection to the DB
+            PyPhDB_inst.close_connection()
+            # Restart Pi-hole
+            restart_pihole(docker=args.docker)
     else:
         exit(1)
 else:
