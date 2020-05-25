@@ -10,9 +10,9 @@ import validators
 
 class PyPhDB:
 
-    def __init__(self):
+    def __init__(self, ph_dir='/etc/pihole/'):
 
-        self.path_pihole_dir = r'/etc/pihole'
+        self.path_pihole_dir = '/etc/pihole/' if not ph_dir else os.path.expanduser(ph_dir)
         self.path_pihole_db = os.path.join(self.path_pihole_dir, 'gravity.db')
         self.path_output_dir = os.path.join(self.path_pihole_dir, 'PyPhDB')
         self.connection = None
@@ -43,7 +43,7 @@ class PyPhDB:
                 print('[e] Write access is not available to the Pi-hole directory.')
                 return False
         else:
-            print('[e] Pi-hole directory was not found!')
+            print(f'[e] {self.path_pihole_dir} does not exist.')
             return False
 
     def make_connection(self):
@@ -250,6 +250,7 @@ class PyPhDB:
         self.connection.commit()
 
     def clean_dump(self):
+
         if os.path.exists(self.path_output_dir):
             print('[i] Removing output directory')
             shutil.rmtree(self.path_output_dir)
@@ -257,9 +258,24 @@ class PyPhDB:
             print('[i] Output directory does not exist')
 
 
-def restart_pihole():
+def restart_pihole(docker=False):
+
+    # Form the command to restart Pi-hole
+    cmd = ['pihole', 'restartdns', 'reload']
+
+    # If it's running in a docker container
+    if docker:
+        # Prepend list with docker commands
+        cmd[0:0] = ['docker', 'exec']
+
     print('[i] Restarting Pi-hole')
-    subprocess.call(['pihole', 'restartdns', 'reload'], stdout=subprocess.DEVNULL)
+
+    # Try to run the reset command
+    try:
+        subprocess.call(cmd, stdout=subprocess.DEVNULL)
+    except OSError as e:
+        print(f'[e] Restart failed: {e}')
+        exit(1)
 
 
 # Create a new argument parser
@@ -272,6 +288,13 @@ group_action.add_argument('-d', '--dump', help='Export elements of the Pi-hole D
 group_action.add_argument('-u', '--upload', help='Import text files to the Pi-hole DB', action='store_true')
 # Clean flag
 group_action.add_argument('-c', '--clean', help='Clean (remove) the output directory', action='store_true')
+# Add docker groups
+group_options = parser.add_argument_group()
+# Docker flag
+group_options.add_argument('-dc', '--docker', help='Indicate that Pi-hole is being ran within a docker container',
+                           action='store_true')
+# Pi-hole DIR
+group_options.add_argument('-dir', '--directory', help='Specify Pi-hole Directory')
 # Parse arguments
 args = parser.parse_args()
 
@@ -281,8 +304,13 @@ if not len(sys.argv) > 1:
     # Default to dump mode
     args.dump = True
 
+# If the docker flag is enabled and no directory is specified
+if args.docker and args.directory is None:
+    # Set the directory to the default Pi-hole docker directory
+    args.directory = './etc-pihole/'
+
 # Create a new instance
-PyPhDB_inst = PyPhDB()
+PyPhDB_inst = PyPhDB(ph_dir=args.directory)
 
 # Access check for DB
 if PyPhDB_inst.access_check():
@@ -304,7 +332,7 @@ if PyPhDB_inst.access_check():
         # Close the connection to the DB
         PyPhDB_inst.close_connection()
         # Restart Pi-hole
-        restart_pihole()
+        restart_pihole(docker=args.docker)
     else:
         exit(1)
 else:

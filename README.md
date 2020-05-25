@@ -9,6 +9,11 @@ This script has been created to give you the ability to quickly edit your **Adli
 1. `sudo apt-get install python3-pip`
 2. `sudo pip3 install validators`
 
+### Docker ###
+This script should work with Pi-hole being run within a docker container. In order to indicate that you are using docker, please append `--docker` to the end of the commands below.
+
+If you have changed the Pi-hole docker volume from the default value (**./etc-pihole/**), please also append your directory using the `--directory` switch (e.g. `--docker --directory '~/other-dir/'`)
+
 ### How to use ###
 
 There are three main steps to this script:
