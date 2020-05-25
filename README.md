@@ -10,9 +10,11 @@ This script has been created to give you the ability to quickly edit your **Adli
 2. `sudo pip3 install validators`
 
 ### Docker ###
-This script should work with Pi-hole being run within a docker container. In order to indicate that you are using docker, please append `--docker` to the end of the commands below.
+This script should work with Pi-hole being run within a docker container. In order to interact with your docker container, you must use the `--docker` switch **and** specify your Pi-hole directory volume using `--directory`
 
-If you have changed the Pi-hole docker volume from the default value (**./etc-pihole/**), please also append your directory using the `--directory` switch (e.g. `--docker --directory '~/other-dir/'`)
+**Example:**
+
+`curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --dump --docker --directory '/your/pihole/directory'`
 
 ### How to use ###
 
@@ -21,17 +23,17 @@ There are three main steps to this script:
 #### dump ####
 Dump the items from your Pi-hole DB to  **/etc/pihole/PyPhDB**
 
-` curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --dump`
+`curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --dump`
 
 #### upload ####
 Upload the changes to your Pi-hole DB
 
-` curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --upload`
+`curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --upload`
 
 #### clean ####
 Optional: Remove the **/etc/pihole/PyPhDB** directory.
 
-` curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --clean`
+`curl -sSl https://raw.githubusercontent.com/mmotti/PyPhDB/master/PyPhDB.py | sudo python3 - --clean`
 
 ### Further Information ###
 

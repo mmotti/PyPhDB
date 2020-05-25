@@ -306,8 +306,7 @@ if not len(sys.argv) > 1:
 
 # If the docker flag is enabled and no directory is specified
 if args.docker and args.directory is None:
-    # Set the directory to the default Pi-hole docker directory
-    args.directory = './etc-pihole/'
+    parser.error('[e] If --docker is specified, you must also specify your Pi-hole volume location using --directory')
 
 # Create a new instance
 PyPhDB_inst = PyPhDB(ph_dir=args.directory)
