@@ -120,17 +120,15 @@ class PyPhDB:
 
         # Iterate through dictionary
         for k, v in dict_output.items():
-            # If the set is not empty
-            if v:
-                # Form the file path
-                path_file = os.path.join(self.path_output_dir, k)
+            # Form the file path
+            path_file = os.path.join(self.path_output_dir, k)
 
-                print(f'[i] {k}:')
-                print(f'    --> Outputting {len(v)} lines to {path_file}')
+            print(f'[i] {k}:')
+            print(f'    --> Outputting {len(v)} lines to {path_file}')
 
-                with open(path_file, 'w') as fWrite:
-                    for line in sorted(v):
-                        fWrite.write(f'{line}\n')
+            with open(path_file, 'w') as fWrite:
+                for line in sorted(v):
+                    fWrite.write(f'{line}\n')
 
     def upload_files(self):
 
