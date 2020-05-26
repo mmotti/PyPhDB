@@ -321,10 +321,10 @@ if PyPhDB_inst.access_check():
         PyPhDB_inst.fetch_data()
         # If the dump flag is enabled
         if args.dump:
-            # Dump data to disk
-            PyPhDB_inst.dump_data()
             # Close the connection to the DB
             PyPhDB_inst.close_connection()
+            # Dump data to disk
+            PyPhDB_inst.dump_data()
         # If the upload flag is enabled
         elif args.upload:
             PyPhDB_inst.upload_files()
