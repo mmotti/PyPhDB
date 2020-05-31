@@ -15,6 +15,7 @@ class PyPhDB:
         self.path_pihole_dir = '/etc/pihole/' if not ph_dir else os.path.expanduser(ph_dir)
         self.path_pihole_db = os.path.join(self.path_pihole_dir, 'gravity.db')
         self.path_output_dir = os.path.join(self.path_pihole_dir, 'PyPhDB')
+        self.comment = 'Imported by PyPhDB'
         self.connection = None
         self.cursor = None
 
@@ -147,24 +148,24 @@ class PyPhDB:
 
         dict_sql = {
             'adlists.list':
-            'INSERT OR IGNORE INTO adlist (address) VALUES (?)\
-            |DELETE FROM adlist WHERE address IN (?)',
+            'INSERT OR IGNORE INTO adlist (address, comment) VALUES (?, ?)|\
+            DELETE FROM adlist WHERE address IN (?)',
             'whitelist.list':
-            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (0, ?, 1)\
-            |DELETE FROM domainlist WHERE domain IN (?) AND type = 0\
-            |DELETE FROM domainlist WHERE type = 0',
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled, comment) VALUES (0, ?, 1, ?)|\
+            DELETE FROM domainlist WHERE domain IN (?) AND type = 0|\
+            DELETE FROM domainlist WHERE type = 0',
             'blacklist.list':
-            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (1, ?, 1)\
-            |DELETE FROM domainlist WHERE domain IN (?) AND type = 1\
-            |DELETE FROM domainlist WHERE type = 1',
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled, comment) VALUES (1, ?, 1, ?)|\
+            DELETE FROM domainlist WHERE domain IN (?) AND type = 1|\
+            DELETE FROM domainlist WHERE type = 1',
             'whitelist_regex.list':
-            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (2, ?, 1)\
-            |DELETE FROM domainlist WHERE domain IN (?) AND type = 2\
-            |DELETE FROM domainlist WHERE type = 2',
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled, comment) VALUES (2, ?, 1, ?)|\
+            DELETE FROM domainlist WHERE domain IN (?) AND type = 2|\
+            DELETE FROM domainlist WHERE type = 2',
             'regex.list':
-            'INSERT OR IGNORE INTO domainlist (type, domain, enabled) VALUES (3, ?, 1)\
-            |DELETE FROM domainlist WHERE domain IN (?) AND type = 3\
-            |DELETE FROM domainlist WHERE type = 3'
+            'INSERT OR IGNORE INTO domainlist (type, domain, enabled, comment) VALUES (3, ?, 1, ?)|\
+            DELETE FROM domainlist WHERE domain IN (?) AND type = 3|\
+            DELETE FROM domainlist WHERE type = 3'
         }
 
         # Determine how each list needs to be validated
@@ -221,7 +222,7 @@ class PyPhDB:
                     else:
                         print(' --> Updating DB')
                         # Update or Ignore
-                        self.cursor.executemany(dict_sql[k].split('|')[0], [(x,) for x in set_modified])
+                        self.cursor.executemany(dict_sql[k].split('|')[0], [(x, self.comment) for x in set_modified])
                         # Find items that are in the DB but not in the modified files (for removal from db)
                         set_removal.update(x for x in v if x not in set_modified)
                         # If there are items to remove from the DB
